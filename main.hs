@@ -32,6 +32,16 @@ Collection json
   name Text
   authorId AuthorId
   deriving Show
+
+PostTag json
+  postId PostId
+  authorId AuthorId
+  deriving Show
+
+PostCollection json
+  postId PostId
+  collectionId CollectionId
+  deriving Show
 |]
 
 mkYesod "Pagina" [parseRoutes|
