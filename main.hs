@@ -73,18 +73,19 @@ instance Yesod Page where
   isAuthorized ErrorR _ = return Authorized
   isAuthorized _ _ = return AuthenticationRequired
 
+-- OLD CODE FOR REF
 
 isUser = do
     mu <- lookupSession "_ID"
     return $ case mu of
         Nothing -> AuthenticationRequired
         Just _ -> Authorized
-    
+
 isAdmin = do
     mu <- lookupSession "_ID"
     return $ case mu of
         Nothing -> AuthenticationRequired
-        Just "admin" -> Authorized 
+        Just "admin" -> Authorized
         Just _ -> Unauthorized "Voce precisa ser admin para entrar aqui"
 
 instance YesodPersist Pagina where
@@ -130,7 +131,7 @@ getPerfilR uid = do
 postUsuarioR :: Handler Html
 postUsuarioR = do
            ((result, _), _) <- runFormPost formUser
-           case result of 
+           case result of
                FormSuccess user -> (runDB $ insert user) >>= \piid -> redirect (PerfilR piid)
                _ -> redirect ErroR
 
@@ -152,9 +153,9 @@ getLoginR = do
 postLoginR :: Handler Html
 postLoginR = do
            ((result, _), _) <- runFormPost formLogin
-           case result of 
+           case result of
                FormSuccess ("admin","admin") -> setSession "_ID" "admin" >> redirect AdminR
-               FormSuccess (login,senha) -> do 
+               FormSuccess (login,senha) -> do
                    user <- runDB $ selectFirst [UsersLogin ==. login, UsersSenha ==. senha] []
                    case user of
                        Nothing -> redirect LoginR
@@ -168,13 +169,13 @@ getErroR = defaultLayout [whamlet|
 getLogoutR :: Handler Html
 getLogoutR = do
      deleteSession "_ID"
-     defaultLayout [whamlet| 
+     defaultLayout [whamlet|
          <h1> ADEUS!
      |]
 
 connStr = "dbname=dd9en8l5q4hh2a host=ec2-107-21-219-201.compute-1.amazonaws.com user=kpuwtbqndoeyqb password=aCROh525uugAWF1l7kahlNN3E0 port=5432"
 
 main::IO()
-main = runStdoutLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do 
+main = runStdoutLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
        runSqlPersistMPool (runMigration migrateAll) pool
        warp 8080 (Pagina pool)
