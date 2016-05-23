@@ -10,11 +10,11 @@ import Control.Monad.Logger (runStdoutLoggingT)
 data Page = Page{connPool :: ConnectionPool}
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Users json
-   nome Text
-   login Text
-   senha Text
-   deriving Show
+Author json
+  name Text
+  nick Text
+  password Text
+  deriving Show
 |]
 
 mkYesod "Pagina" [parseRoutes|
