@@ -27,6 +27,11 @@ Tag json
   name Text
   authorId AuthorId
   deriving Show
+
+Collection json
+  name Text
+  authorId AuthorId
+  deriving Show
 |]
 
 mkYesod "Pagina" [parseRoutes|
