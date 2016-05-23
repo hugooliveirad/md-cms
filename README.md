@@ -5,17 +5,17 @@ haskell course project of a cms
 
 ## DB
 
-Authors have an ´id´, ´name´, ´nick´, ´password´
+Authors have an `id`, `name`, `nick`, `password`
 
-Posts have an ´id´, ´title´, ´content´, ´publish_date´, ´author_id´
+Posts have an `id`, `title`, `content`, `publish_date`, `author_id`
 
-Tags have an ´id´, ´name´, ´author_id´
+Tags have an `id`, `name`, `author_id`
 
-Collections have an ´id´, ´title´, ´author_id´
+Collections have an `id`, `title`, `author_id`
 
-PostsTags have an ´id´, ´post_id´, ´tag_id´
+PostsTags have an `id`, `post_id`, `tag_id`
 
-PostsCollections have an ´id´, ´collection_id´, ´post_id´, ´author_id´
+PostsCollections have an `id`, `collection_id`, `post_id`, `author_id`
 
 ## Use cases
 
