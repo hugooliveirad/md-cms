@@ -15,6 +15,13 @@ Author json
   nick Text
   password Text
   deriving Show
+
+Post json
+  title Text
+  content Text
+  publishDate UTCTime
+  authorId Text
+  deriving Show
 |]
 
 mkYesod "Pagina" [parseRoutes|
