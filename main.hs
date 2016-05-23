@@ -5,6 +5,7 @@
 import Yesod
 import Database.Persist.Postgresql
 import Data.Text
+import Data.Time
 import Control.Monad.Logger (runStdoutLoggingT)
 
 data Page = Page{connPool :: ConnectionPool}
