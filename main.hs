@@ -22,6 +22,11 @@ Post json
   publishDate UTCTime
   authorId Text
   deriving Show
+
+Tag json
+  name Text
+  authorId AuthorId
+  deriving Show
 |]
 
 mkYesod "Pagina" [parseRoutes|
