@@ -65,15 +65,13 @@ mkYesod "Page" [parseRoutes|
 /api/collections/#CollectionId CollectionR GET PUT DELETE
 |]
 
-instance Yesod Pagina where
-    authRoute _ = Just LoginR
-    
-    isAuthorized LoginR _ = return Authorized
-    isAuthorized ErroR _ = return Authorized
-    isAuthorized HomeR _ = return Authorized
-    isAuthorized UsuarioR _ = return Authorized
-    isAuthorized AdminR _ = isAdmin
-    isAuthorized _ _ = isUser
+instance Yesod Page where
+  authRoute _ = Just LoginR
+  isAuthorized HomeR _ = return Authorized
+  isAuthorized LoginR _ = return Authorized
+  isAuthorized ErrorR _ = return Authorized
+  isAuthorized _ _ = return AuthenticationRequired
+
 
 isUser = do
     mu <- lookupSession "_ID"
