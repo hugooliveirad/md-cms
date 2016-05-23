@@ -44,14 +44,25 @@ PostCollection json
   deriving Show
 |]
 
-mkYesod "Pagina" [parseRoutes|
+-- como declarar querystrings?
+-- ex: /api/posts?author_id=2
+mkYesod "Page" [parseRoutes|
 / HomeR GET
 /login LoginR GET POST
-/erro ErroR GET
-/usuario UsuarioR GET POST
-/perfil/#UsersId PerfilR GET
-/admin AdminR GET
 /logout LogoutR GET
+/error ErrorR GET
+
+/api/authors AuthorsR GET POST
+/api/authors/#AuthorID AuthorR GET PUT DELETE
+
+/api/posts PostsR GET POST
+/api/posts/#PostId PostR GET PUT DELETE
+
+/api/tags TagsR GET POST
+/api/tags/#TagId TagR GET PUT DELETE
+
+/api/collections CollectionsR GET POST
+/api/collections/#CollectionId CollectionR GET PUT DELETE
 |]
 
 instance Yesod Pagina where
