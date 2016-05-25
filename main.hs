@@ -73,6 +73,15 @@ instance Yesod Page where
   isAuthorized ErrorR _ = return Authorized
   isAuthorized _ _ = return AuthenticationRequired
 
+instance YesodPersist Page where
+  type YesodPersistBackend Page = SqlBackend
+  runDB f = do
+    master <- getYesod
+    let pool = connPool master
+    runSqlPool f pool
+
+
+
 -- OLD CODE FOR REF
 
 isUser = do
