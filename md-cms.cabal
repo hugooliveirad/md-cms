@@ -4,9 +4,9 @@ cabal-version:     >= 1.8
 build-type:        Simple
 
 executable         md-cms
-    hs-source-dirs: .
+    hs-source-dirs: src
 
-    main-is:           main.hs
+    main-is:           ../Main.hs
 
     ghc-options:       -threaded -O2 -rtsopts -with-rtsopts=-N
 
@@ -37,3 +37,10 @@ executable         md-cms
                  , persistent                    >= 2.0        && < 2.3
                  , persistent-postgresql             >= 2.1.1      && < 2.3
                  , monad-logger
+                 , shakespeare
+                 , time
+    
+    other-modules: Foundation,
+                   Routes,
+                   Handlers,
+                   Model
