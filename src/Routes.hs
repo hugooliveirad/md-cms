@@ -4,9 +4,11 @@
              GeneralizedNewtypeDeriving, ViewPatterns #-}
 module Routes where
 import Yesod
+import Model
 
 pRoutes = [parseRoutes|
   / HomeR GET
+  /api/authors AuthorsR GET POST
 |]
 
 {-
