@@ -8,7 +8,7 @@ import Data.Text
 
 pModel :: [EntityDef]
 pModel = [persistLowerCase|
-Author
+Author json
   name Text
   nick Text
   password Text
