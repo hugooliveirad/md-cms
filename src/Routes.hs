@@ -9,6 +9,7 @@ import Model
 pRoutes = [parseRoutes|
   / HomeR GET
   /api/authors AuthorsR GET POST
+  /api/authors/#AuthorId AuthorR GET PUT DELETE
 |]
 
 {-

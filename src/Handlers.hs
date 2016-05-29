@@ -34,3 +34,20 @@ postAuthorsR = do
   author <- runDB $ get404 authorId
   sendResponse $ toJSON author
 
+getAuthorR :: AuthorId -> Handler ()
+getAuthorR id = do
+  author <- runDB $ get404 id
+  sendResponse $ toJSON author
+
+putAuthorR :: AuthorId -> Handler ()
+putAuthorR id = do
+  author <- requireJsonBody :: Handler Author
+  runDB $ update id [AuthorName =. authorName author,
+                     AuthorNick =. authorNick author]
+  author <- runDB $ get404 id
+  sendResponse $ toJSON author
+
+deleteAuthorR :: AuthorId -> Handler ()
+deleteAuthorR id = do
+  runDB $ delete id
+
