@@ -6,6 +6,7 @@ module Model where
 import Yesod
 import Data.Text
 
+pModel :: [EntityDef]
 pModel = [persistLowerCase|
 Author
   name Text
