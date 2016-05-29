@@ -14,7 +14,7 @@ Author json
   password Text
   deriving Show
 
-Post
+Post json
   title Text
   content Text
   publishDate Text

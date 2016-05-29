@@ -13,6 +13,8 @@ import Database.Persist.Postgresql
 
 mkYesodDispatch "Page" pRoutes
 
+-- Pages
+
 getHomeR :: Handler Html
 getHomeR = defaultLayout [whamlet|
      <h1> Ola!
@@ -51,3 +53,16 @@ deleteAuthorR :: AuthorId -> Handler ()
 deleteAuthorR id = do
   runDB $ delete id
 
+-- Post
+
+getPostsR :: Handler ()
+getPostsR = do
+  posts <- runDB $ selectList [] [Asc PostTitle]
+  sendResponse $ toJSON posts
+
+postPostsR :: Handler ()
+postPostsR = do
+  post <- requireJsonBody :: Handler Post
+  postId <- runDB $ insert post
+  post <- runDB $ get404 postId
+  sendResponse $ toJSON post
