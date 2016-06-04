@@ -66,6 +66,7 @@ postPostsR = do
   postId <- runDB $ insert post
   post <- runDB $ get404 postId
   sendResponse $ toJSON post
+
 getPostR :: PostId -> Handler ()
 getPostR id = do
   post <- runDB $ get404 id
@@ -83,4 +84,35 @@ putPostR id = do
 
 deletePostR :: PostId -> Handler ()
 deletePostR id = do
+  runDB $ delete id
+
+-- Tag
+
+getTagsR :: Handler ()
+getTagsR = do
+  tags <- runDB $ selectList [] [Asc TagTitle]
+  sendResponse $ toJSON tags
+
+tagTagsR :: Handler ()
+tagTagsR = do
+  tag <- requireJsonBody :: Handler Tag
+  tagId <- runDB $ insert tag
+  tag <- runDB $ get404 tagId
+  sendResponse $ toJSON tag
+
+getTagR :: TagId -> Handler ()
+getTagR id = do
+  tag <- runDB $ get404 id
+  sendResponse $ toJSON tag
+
+putTagR :: TagId -> Handler ()
+putTagR id = do
+  tag <- requireJsonBody :: Handler Tag
+  runDB $ update id [TagName =. tagName tag,
+                     TagAuthorId =. tagAuthorId tag]
+  tag <- runDB $ get404 id
+  sendResponse $ toJSON tag
+
+deleteTagR :: TagId -> Handler ()
+deleteTagR id = do
   runDB $ delete id
