@@ -90,7 +90,7 @@ deletePostR id = do
 
 getTagsR :: Handler ()
 getTagsR = do
-  tags <- runDB $ selectList [] [Asc TagTitle]
+  tags <- runDB $ selectList [] [Asc TagName]
   sendResponse $ toJSON tags
 
 tagTagsR :: Handler ()
