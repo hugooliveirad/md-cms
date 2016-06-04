@@ -13,7 +13,7 @@ Author json
   nick Text
   password Text
 
-  UniqueNick nick
+  UniqueAuthorNick nick
   deriving Show
 
 Post json
@@ -26,14 +26,14 @@ Tag json
   name Text
   authorId AuthorId
 
-  UniqueName name
+  UniqueTagName name
   deriving Show
 
 Collection json
   name Text
   authorId AuthorId
 
-  UniqueName name
+  UniqueCollectionName name
   deriving Show
 
 PostTag
