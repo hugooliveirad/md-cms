@@ -18,7 +18,7 @@ Post json
   title Text
   content Text
   publishDate Text
-  authorId Text
+  authorId AuthorId
   deriving Show
 
 Tag json

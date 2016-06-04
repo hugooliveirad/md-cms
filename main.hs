@@ -16,5 +16,5 @@ connStr = "dbname=d3k3divnnj013l host=ec2-54-235-119-29.compute-1.amazonaws.com 
 
 main::IO()
 main = runStdoutLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
-       runSqlPersistMPool (runMigration migrateAll) pool
+       runSqlPersistMPool (runMigrationUnsafe migrateAll) pool
        warp 8080 (Page pool)
