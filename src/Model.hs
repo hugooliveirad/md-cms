@@ -21,7 +21,7 @@ Post json
   authorId Text
   deriving Show
 
-Tag
+Tag json
   name Text
   authorId AuthorId
   deriving Show
