@@ -26,6 +26,8 @@ Post json
 Tag json
   name Text
   authorId AuthorId
+
+  UniqueName name
   deriving Show
 
 Collection json
