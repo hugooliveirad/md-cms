@@ -77,7 +77,6 @@ putPostR id = do
   post <- requireJsonBody :: Handler Post
   runDB $ update id [PostTitle =. postTitle post,
                      PostContent =. postContent post,
-                     PostPublishDate =. postPublishDate post,
                      PostAuthorId =. postAuthorId post]
   post <- runDB $ get404 id
   sendResponse $ toJSON post

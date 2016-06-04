@@ -19,7 +19,6 @@ Author json
 Post json
   title Text
   content Text
-  publishDate Text
   authorId AuthorId
   deriving Show
 
