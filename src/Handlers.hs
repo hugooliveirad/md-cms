@@ -93,8 +93,8 @@ getTagsR = do
   tags <- runDB $ selectList [] [Asc TagName]
   sendResponse $ toJSON tags
 
-tagTagsR :: Handler ()
-tagTagsR = do
+postTagsR :: Handler ()
+postTagsR = do
   tag <- requireJsonBody :: Handler Tag
   tagId <- runDB $ insert tag
   tag <- runDB $ get404 tagId
