@@ -33,6 +33,8 @@ Tag json
 Collection json
   name Text
   authorId AuthorId
+
+  UniqueName name
   deriving Show
 
 PostTag
