@@ -26,7 +26,7 @@ Tag json
   authorId AuthorId
   deriving Show
 
-Collection
+Collection json
   name Text
   authorId AuthorId
   deriving Show

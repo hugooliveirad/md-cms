@@ -116,3 +116,34 @@ putTagR id = do
 deleteTagR :: TagId -> Handler ()
 deleteTagR id = do
   runDB $ delete id
+
+-- Collection
+
+getCollectionsR :: Handler ()
+getCollectionsR = do
+  collections <- runDB $ selectList [] [Asc CollectionName]
+  sendResponse $ toJSON collections
+
+postCollectionsR :: Handler ()
+postCollectionsR = do
+  collection <- requireJsonBody :: Handler Collection
+  collectionId <- runDB $ insert collection
+  collection <- runDB $ get404 collectionId
+  sendResponse $ toJSON collection
+
+getCollectionR :: CollectionId -> Handler ()
+getCollectionR id = do
+  collection <- runDB $ get404 id
+  sendResponse $ toJSON collection
+
+putCollectionR :: CollectionId -> Handler ()
+putCollectionR id = do
+  collection <- requireJsonBody :: Handler Collection
+  runDB $ update id [CollectionName =. collectionName collection,
+                     CollectionAuthorId =. collectionAuthorId collection]
+  collection <- runDB $ get404 id
+  sendResponse $ toJSON collection
+
+deleteCollectionR :: CollectionId -> Handler ()
+deleteCollectionR id = do
+  runDB $ delete id

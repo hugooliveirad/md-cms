@@ -16,6 +16,9 @@ pRoutes = [parseRoutes|
 
   /api/tags TagsR GET POST
   /api/tags/#TagId TagR GET PUT DELETE
+
+  /api/collections CollectionsR GET POST
+  /api/collections/#CollectionId CollectionR GET PUT DELETE
 |]
 
 {-
