@@ -66,3 +66,21 @@ postPostsR = do
   postId <- runDB $ insert post
   post <- runDB $ get404 postId
   sendResponse $ toJSON post
+getPostR :: PostId -> Handler ()
+getPostR id = do
+  post <- runDB $ get404 id
+  sendResponse $ toJSON post
+
+putPostR :: PostId -> Handler ()
+putPostR id = do
+  post <- requireJsonBody :: Handler Post
+  runDB $ update id [PostTitle =. postTitle post,
+                     PostContent =. postContent post,
+                     PostPublishDate =. postPublishDate post,
+                     PostAuthorId =. postAuthorId post]
+  post <- runDB $ get404 id
+  sendResponse $ toJSON post
+
+deletePostR :: PostId -> Handler ()
+deletePostR id = do
+  runDB $ delete id

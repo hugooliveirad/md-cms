@@ -12,6 +12,7 @@ pRoutes = [parseRoutes|
   /api/authors/#AuthorId AuthorR GET PUT DELETE
 
   /api/posts PostsR GET POST
+  /api/posts/#PostId PostR GET PUT DELETE
 |]
 
 {-
