@@ -12,6 +12,8 @@ Author json
   name Text
   nick Text
   password Text
+
+  UniqueNick nick
   deriving Show
 
 Post json
