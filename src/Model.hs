@@ -41,7 +41,7 @@ PostTag
   authorId AuthorId
   deriving Show
 
-PostCollection
+PostCollection json
   postId PostId
   collectionId CollectionId
   deriving Show

@@ -146,3 +146,21 @@ putCollectionR id = do
 deleteCollectionR :: CollectionId -> Handler ()
 deleteCollectionR id = do
   runDB $ delete id
+
+-- PostCollection
+
+getPostCollectionsR :: CollectionId -> Handler ()
+getPostCollectionsR id = do
+  postCollections <- runDB $ selectList [PostCollectionCollectionId ==. id] []
+  sendResponse $ toJSON postCollections
+
+postPostCollectionR :: CollectionId -> PostId -> Handler ()
+postPostCollectionR collId postId = do
+  postCollectionId <- runDB $ insert $ PostCollection postId collId
+  postCollection <- runDB $ get404 postCollectionId
+  sendResponse $ toJSON postCollection
+
+deletePostCollectionR :: CollectionId -> PostId -> Handler ()
+deletePostCollectionR collId postId = do
+  runDB $ deleteWhere [PostCollectionPostId ==. postId,
+                       PostCollectionCollectionId ==. collId]
