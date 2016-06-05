@@ -44,5 +44,7 @@ TagPost json
 CollectionPost json
   collectionId CollectionId
   postId PostId
+  
+  UniqueCollectionPost collectionId postId
   deriving Show
 |]
