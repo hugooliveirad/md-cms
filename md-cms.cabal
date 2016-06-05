@@ -39,6 +39,7 @@ executable         md-cms
                  , monad-logger
                  , shakespeare
                  , time
+                 , esqueleto
     
     other-modules: Foundation,
                    Routes,

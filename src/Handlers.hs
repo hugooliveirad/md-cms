@@ -10,6 +10,8 @@ import Control.Applicative
 import Data.Text
 
 import Database.Persist.Postgresql
+import qualified Database.Esqueleto as E
+import           Database.Esqueleto ((^.))
 
 mkYesodDispatch "Page" pRoutes
 
@@ -151,8 +153,12 @@ deleteCollectionR id = do
 
 getCollectionPostsR :: CollectionId -> Handler ()
 getCollectionPostsR id = do
-  collectionPost <- runDB $ selectList [CollectionPostCollectionId ==. id] []
-  sendResponse $ toJSON collectionPost
+  posts <- runDB 
+    $ E.select
+    $ E.from $ \(collectionPost `E.InnerJoin` post) -> do
+        E.on $ collectionPost ^. CollectionPostPostId E.==. post ^. PostId
+        return post
+  sendResponse $ toJSON posts
 
 postCollectionPostR :: CollectionId -> PostId -> Handler ()
 postCollectionPostR collId postId = do
