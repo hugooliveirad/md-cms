@@ -170,3 +170,25 @@ deleteCollectionPostR :: CollectionId -> PostId -> Handler ()
 deleteCollectionPostR collId postId = do
   runDB $ deleteWhere [CollectionPostPostId ==. postId,
                        CollectionPostCollectionId ==. collId]
+
+-- TagPosts
+
+getTagPostsR :: TagId -> Handler ()
+getTagPostsR id = do
+  posts <- runDB 
+    $ E.select
+    $ E.from $ \(tagPost `E.InnerJoin` post) -> do
+        E.on $ tagPost ^. TagPostPostId E.==. post ^. PostId
+        return post
+  sendResponse $ toJSON posts
+
+postTagPostR :: TagId -> PostId -> Handler ()
+postTagPostR tagId postId = do
+  tagPostId <- runDB $ insert $ TagPost tagId postId
+  tagPost <- runDB $ get404 tagPostId
+  sendResponse $ toJSON tagPost
+
+deleteTagPostR :: TagId -> PostId -> Handler ()
+deleteTagPostR tagId postId = do
+  runDB $ deleteWhere [TagPostPostId ==. postId,
+                       TagPostTagId ==. tagId]

@@ -36,9 +36,9 @@ Collection json
   UniqueCollectionName name
   deriving Show
 
-PostTag
+TagPost json
+  tagId TagId
   postId PostId
-  authorId AuthorId
   deriving Show
 
 CollectionPost json

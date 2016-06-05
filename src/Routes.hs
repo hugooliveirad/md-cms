@@ -22,15 +22,13 @@ pRoutes = [parseRoutes|
 
   /api/collections/#CollectionId/posts         CollectionPostsR GET
   /api/collections/#CollectionId/posts/#PostId CollectionPostR POST DELETE
+
+  /api/tags/#TagId/posts         TagPostsR GET
+  /api/tags/#TagId/posts/#PostId TagPostR POST DELETE
 |]
 
 {-
 /login LoginR GET POST
 /logout LogoutR GET
 /error ErrorR GET
-
-
-
-/api/collections CollectionsR GET POST
-/api/collections/#CollectionId CollectionR GET PUT DELETE
 -}
