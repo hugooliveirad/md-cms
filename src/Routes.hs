@@ -20,8 +20,8 @@ pRoutes = [parseRoutes|
   /api/collections CollectionsR GET POST
   /api/collections/#CollectionId CollectionR GET PUT DELETE
 
-  /api/collections/#CollectionId/posts PostCollectionsR GET
-  /api/collections/#CollectionId/posts/#PostId PostCollectionR POST DELETE
+  /api/collections/#CollectionId/posts         CollectionPostsR GET
+  /api/collections/#CollectionId/posts/#PostId CollectionPostR POST DELETE
 |]
 
 {-
