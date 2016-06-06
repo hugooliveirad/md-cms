@@ -39,6 +39,8 @@ Collection json
 TagPost json
   tagId TagId
   postId PostId
+
+  UniqueTagPost tagId postId
   deriving Show
 
 CollectionPost json

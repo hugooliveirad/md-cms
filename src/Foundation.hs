@@ -10,6 +10,8 @@ import Data.Text
 import Database.Persist.Postgresql
     ( ConnectionPool, SqlBackend, runSqlPool, runMigration )
 
+import Control.Monad.Logger (runStdoutLoggingT)
+
 data Page = Page { connPool :: ConnectionPool }
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] pModel
@@ -24,6 +26,10 @@ instance YesodPersist Page where
        runSqlPool f pool
 
 instance Yesod Page where
+  isAuthorized _ False = return Authorized
+  isAuthorized LoginR _ = return Authorized
+  -- prevent write from users not logged in
+  isAuthorized _ True = return AuthenticationRequired
 
 type Form a = Html -> MForm Handler (FormResult a, Widget)
 

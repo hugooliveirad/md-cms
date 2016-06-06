@@ -192,3 +192,13 @@ deleteTagPostR :: TagId -> PostId -> Handler ()
 deleteTagPostR tagId postId = do
   runDB $ deleteWhere [TagPostPostId ==. postId,
                        TagPostTagId ==. tagId]
+
+-- Login
+postLoginR :: Handler ()
+postLoginR = do
+  author <- requireJsonBody :: Handler Author
+  user <- runDB $ selectFirst [AuthorNick ==. authorNick author,
+                               AuthorPassword ==. authorPassword author] []
+  case user of
+    Nothing -> permissionDenied "Wrong nick or password"
+    Just (Entity pid u) -> setSession "_ID" (pack $ show $ fromSqlKey pid)

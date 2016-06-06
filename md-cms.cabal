@@ -35,10 +35,9 @@ executable         md-cms
                  , bytestring                    >= 0.9        && < 0.11
                  , text                          >= 0.11       && < 2.0
                  , persistent                    >= 2.0        && < 2.3
-                 , persistent-postgresql             >= 2.1.1      && < 2.3
+                 , persistent-postgresql         >= 2.1.1      && < 2.3
                  , monad-logger
                  , shakespeare
-                 , time
                  , esqueleto
     
     other-modules: Foundation,
