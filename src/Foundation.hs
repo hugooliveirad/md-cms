@@ -6,15 +6,18 @@ module Foundation where
 import Routes
 import Model
 import Yesod
+import Yesod.Static
 import Data.Text
 import Database.Persist.Postgresql
     ( ConnectionPool, SqlBackend, runSqlPool, runMigration )
 
 import Control.Monad.Logger (runStdoutLoggingT)
 
-data Page = Page { connPool :: ConnectionPool }
+data Page = Page { getStatic :: Static, connPool :: ConnectionPool }
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] pModel
+
+staticFiles "static"
 
 mkYesodData "Page" pRoutes
 

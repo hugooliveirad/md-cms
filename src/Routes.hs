@@ -29,4 +29,6 @@ pRoutes = [parseRoutes|
 
   /api/tags/#TagId/posts         TagPostsR GET
   /api/tags/#TagId/posts/#PostId TagPostR POST DELETE
+
+  /static StaticR Static getStatic 
 |]

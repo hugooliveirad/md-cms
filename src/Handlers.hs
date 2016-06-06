@@ -18,9 +18,12 @@ mkYesodDispatch "Page" pRoutes
 -- Pages
 
 getHomeR :: Handler Html
-getHomeR = defaultLayout [whamlet|
-     <h1> Ola!
-|]
+getHomeR = defaultLayout $ do
+  addStylesheet $ StaticR main_css
+  addScript $ StaticR main_js
+  toWidget [whamlet|
+              <div id="app-wrapper">
+           |]
 
 -- API
 
