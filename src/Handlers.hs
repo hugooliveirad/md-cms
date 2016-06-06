@@ -202,3 +202,7 @@ postLoginR = do
   case user of
     Nothing -> permissionDenied "Wrong nick or password"
     Just (Entity pid u) -> setSession "_ID" (pack $ show $ fromSqlKey pid)
+
+postLogoutR :: Handler ()
+postLogoutR = do
+  deleteSession "_ID"

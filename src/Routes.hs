@@ -10,6 +10,7 @@ pRoutes = [parseRoutes|
   / HomeR GET
 
   /api/login LoginR POST
+  /api/logout LogoutR POST
 
   /api/authors           AuthorsR GET POST
   /api/authors/#AuthorId AuthorR GET PUT DELETE
