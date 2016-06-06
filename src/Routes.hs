@@ -30,7 +30,3 @@ pRoutes = [parseRoutes|
   /api/tags/#TagId/posts         TagPostsR GET
   /api/tags/#TagId/posts/#PostId TagPostR POST DELETE
 |]
-
-{-
-  /api/logout LogoutR GET
--}
