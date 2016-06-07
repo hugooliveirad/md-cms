@@ -16,3 +16,26 @@ body {
   width: 100%;
   margin: 10px 0;
 }
+
+.main {
+  display: flex;
+}
+
+.content {
+  flex: 1;
+}
+
+.sidebar {
+  width: 350px;
+  padding-left: 50px;
+  flex: 0 0 auto;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+li {
+  margin: 5px 0;
+}

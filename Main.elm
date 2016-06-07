@@ -465,15 +465,40 @@ encodeTag tag =
 view : Model -> Html Msg
 view model =
   div []
-    [ viewAuthors model.authors
-    , viewNewAuthor model.newAuthor
-    , viewCollections model.collections
-    , viewNewCollection model.newCollection
-    , viewTags model.tags
-    , viewNewTag model.newTag
-    , viewPosts model.posts
-    , viewNewPost model.newPost
-    ]
+    [ header [ class "header" ]
+      [ h1 [ class "title" ] [ text "md-cms" ] ]
+    , div [ class "main" ]
+      [ content 
+        [ viewPosts model.posts
+        , viewNewPost model.newPost
+        ]
+      , sidebar 
+        [ sidebarSection
+          [viewAuthors model.authors
+          , viewNewAuthor model.newAuthor
+          ]
+        , sidebarSection
+          [ viewCollections model.collections
+          , viewNewCollection model.newCollection
+          ]
+        , sidebarSection
+          [ viewTags model.tags
+          , viewNewTag model.newTag]
+          ] 
+        ]
+      ]
+
+content : List (Html Msg) -> Html Msg
+content children =
+  div [ class "content" ] children
+
+sidebar : List (Html Msg) -> Html Msg
+sidebar children =
+  aside [ class "sidebar" ] children
+
+sidebarSection : List (Html Msg) -> Html Msg
+sidebarSection children =
+  section [ class "sidebar-section" ] children
 
 viewAuthors : Authors -> Html Msg
 viewAuthors authors =
@@ -503,8 +528,8 @@ viewPosts posts =
 viewPost : Bool -> Post -> Html Msg
 viewPost preview post =
   li []
-    [ div []
-      [ h1 [] [ text post.title ] 
+    [ article []
+      [ h2 [] [ text post.title ] 
       , div [] [ text post.content ] ] ]
 
 viewNewPost : Post -> Html Msg
