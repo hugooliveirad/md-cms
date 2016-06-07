@@ -91,6 +91,10 @@ type Msg
   | NewPostContent String
   | NewPostAuthorId String
 
+  | NewPost
+  | NewPostSucceed (HttpBuilder.Response Post)
+  | NewPostFail (HttpBuilder.Error String)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
   case action of
@@ -141,6 +145,12 @@ update action model =
       in 
           ( { model | newPost = { newPost | authorId = id } }, Cmd.none )
 
+    NewPost ->
+      ( model, postPost model.newPost )
+    NewPostSucceed resp ->
+      ( { model | newPost = emptyPost }, getPosts )
+    NewPostFail _ ->
+      ( model, Cmd.none )
 
 getAuthors : Cmd Msg
 getAuthors =
@@ -198,6 +208,17 @@ getPostsTask =
     |> withHeader "Content-Type" "application/json"
     |> send (jsonReader decodePosts) stringReader
 
+postPost : Post -> Cmd Msg
+postPost post =
+  Task.perform NewPostFail NewPostSucceed (postPostTask post)
+
+postPostTask : Post -> Task (HttpBuilder.Error String) (HttpBuilder.Response Post)
+postPostTask post =
+  HttpBuilder.post "/api/posts"
+    |> withHeader "Content-Type" "application/json"
+    |> withJsonBody (encodePost post)
+    |> send (jsonReader decodePost) stringReader
+
 decodePosts : Decode.Decoder Posts
 decodePosts =
   Decode.list decodePost
@@ -209,6 +230,19 @@ decodePost =
     ("content" := Decode.string)
     ("authorId" := Decode.int)
     (Decode.maybe ("id" := Decode.int))
+
+encodePost : Post -> Encode.Value
+encodePost post =
+  let 
+      pid = case post.id of
+        Nothing -> Encode.null
+        Just i -> Encode.int i
+  in
+      Encode.object
+        [ ("title", Encode.string post.title)
+        , ("content", Encode.string post.content)
+        , ("authorId", Encode.int post.authorId)
+        , ("id", pid)]
 
 -- VIEW
 
@@ -255,4 +289,6 @@ viewNewPost post =
   div [ class "form" ]
     [ input [ type' "text", placeholder "Título", value post.title, onInput NewPostTitle ] []
     , textarea [ placeholder "Conteúdo", value post.content, onInput NewPostContent ] []
-    , input [ type' "number", value (toString post.authorId), onInput NewPostAuthorId ] [] ]
+    , input [ type' "number", value (toString post.authorId), onInput NewPostAuthorId ] []
+    , button [ onClick NewPost ] [ text ("Publicar") ] ]
+
