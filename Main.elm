@@ -31,6 +31,7 @@ type alias Model =
   , posts : Posts
   , newPost : Post
   , collections : Collections
+  , newCollection : Collection
   }
 
 type alias Authors =
@@ -90,6 +91,7 @@ initModel =
   , posts = []
   , newPost = emptyPost
   , collections = []
+  , newCollection = emptyCollection
   }
 
 emptyAuthor : Author
@@ -99,6 +101,10 @@ emptyAuthor =
 emptyPost : Post
 emptyPost =
   { title = "", content = "", authorId = 0, id = Nothing }
+
+emptyCollection : Collection
+emptyCollection =
+  { name = "", authorId = 0, id = Nothing }
 
 -- UPDATE
 
@@ -130,6 +136,13 @@ type Msg
   | GetCollections
   | GetCollectionsSucceed (HttpBuilder.Response Collections)
   | GetCollectionsFail (HttpBuilder.Error String)
+
+  | NewCollectionName String
+  | NewCollectionAuthorId String
+
+  | NewCollection
+  | NewCollectionSucceed (HttpBuilder.Response Collection)
+  | NewCollectionFail (HttpBuilder.Error String)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -175,9 +188,7 @@ update action model =
     NewPostAuthorId strId ->
       let 
           newPost = model.newPost
-          id = case String.toInt strId of
-            Ok id -> id
-            Err _ -> 0
+          id = resultWithDefault 0 (String.toInt strId)
       in 
           ( { model | newPost = { newPost | authorId = id } }, Cmd.none )
 
@@ -194,6 +205,29 @@ update action model =
       ( { model | collections = resp.data }, Cmd.none )
     GetCollectionsFail _ ->
       ( model, Cmd.none )
+
+    NewCollectionName name ->
+      let newCollection = model.newCollection
+      in ( { model | newCollection = { newCollection | name = name } }, Cmd.none )
+    NewCollectionAuthorId strId ->
+      let 
+          newCollection = model.newCollection
+          id = resultWithDefault 0 (String.toInt strId)
+      in 
+          ( { model | newCollection = { newCollection | authorId = id } }, Cmd.none )
+
+    NewCollection ->
+      ( model, postCollection model.newCollection )
+    NewCollectionSucceed resp ->
+      ( { model | newCollection = emptyCollection }, getCollections )
+    NewCollectionFail _ ->
+      ( model, Cmd.none )
+
+resultWithDefault : a -> Result b a -> a
+resultWithDefault def res =
+  case res of
+    Ok a -> a
+    Err _ -> def
 
 getAuthors : Cmd Msg
 getAuthors =
@@ -297,6 +331,17 @@ getCollectionsTask =
     |> withHeader "Content-Type" "application/json"
     |> send (jsonReader decodeCollections) stringReader
 
+postCollection : Collection -> Cmd Msg
+postCollection collection =
+  Task.perform NewCollectionFail NewCollectionSucceed (postCollectionTask collection)
+
+postCollectionTask : Collection -> Task (HttpBuilder.Error String) (HttpBuilder.Response Collection)
+postCollectionTask collection =
+  HttpBuilder.post "/api/collections"
+    |> withHeader "Content-Type" "application/json"
+    |> withJsonBody (encodeCollection collection)
+    |> send (jsonReader decodeCollection) stringReader
+
 decodeCollections : Decode.Decoder Collections
 decodeCollections =
   Decode.list decodeCollection
@@ -308,6 +353,18 @@ decodeCollection =
     ("authorId" := Decode.int)
     (Decode.maybe ("id" := Decode.int))
 
+encodeCollection : Collection -> Encode.Value
+encodeCollection collection =
+  let 
+      cid = case collection.id of
+        Nothing -> Encode.null
+        Just i -> Encode.int i
+  in
+      Encode.object
+        [ ("name", Encode.string collection.name)
+        , ("authorId", Encode.int collection.authorId)
+        , ("id", cid)]
+
 -- VIEW
 
 view : Model -> Html Msg
@@ -316,6 +373,7 @@ view model =
     [ viewAuthors model.authors
     , viewNewAuthor model.newAuthor
     , viewCollections model.collections
+    , viewNewCollection model.newCollection
     , viewPosts model.posts
     , viewNewPost model.newPost
     ]
@@ -369,4 +427,11 @@ viewCollection : Collection -> Html Msg
 viewCollection collection =
   li []
     [ text collection.name ]
+
+viewNewCollection : Collection -> Html Msg
+viewNewCollection collection =
+  div [ class "form" ]
+    [ input [ type' "text", placeholder "Nome", value collection.name, onInput NewCollectionName ] []
+    , input [ type' "number", value (toString collection.authorId), onInput NewCollectionAuthorId] []
+    , button [ onClick NewCollection ] [ text ("Criar") ]]
 
