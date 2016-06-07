@@ -21,7 +21,12 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    initModel ! [getAuthors, getPosts, getCollections]
+  initModel ! 
+    [ getAuthors
+    , getPosts
+    , getCollections
+    , getTags
+    ]
 
 -- MODEL
 
@@ -32,6 +37,8 @@ type alias Model =
   , newPost : Post
   , collections : Collections
   , newCollection : Collection
+  , tags : Tags
+  , newTag : Tag
   }
 
 type alias Authors =
@@ -92,6 +99,8 @@ initModel =
   , newPost = emptyPost
   , collections = []
   , newCollection = emptyCollection
+  , tags = []
+  , newTag = emptyTag
   }
 
 emptyAuthor : Author
@@ -104,6 +113,10 @@ emptyPost =
 
 emptyCollection : Collection
 emptyCollection =
+  { name = "", authorId = 0, id = Nothing }
+
+emptyTag : Tag
+emptyTag =
   { name = "", authorId = 0, id = Nothing }
 
 -- UPDATE
@@ -143,6 +156,17 @@ type Msg
   | NewCollection
   | NewCollectionSucceed (HttpBuilder.Response Collection)
   | NewCollectionFail (HttpBuilder.Error String)
+
+  | GetTags
+  | GetTagsSucceed (HttpBuilder.Response Tags)
+  | GetTagsFail (HttpBuilder.Error String)
+
+  | NewTagName String
+  | NewTagAuthorId String
+
+  | NewTag
+  | NewTagSucceed (HttpBuilder.Response Tag)
+  | NewTagFail (HttpBuilder.Error String)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -221,6 +245,30 @@ update action model =
     NewCollectionSucceed resp ->
       ( { model | newCollection = emptyCollection }, getCollections )
     NewCollectionFail _ ->
+      ( model, Cmd.none )
+
+    GetTags ->
+      ( model, getTags )
+    GetTagsSucceed resp ->
+      ( { model | tags = resp.data }, Cmd.none )
+    GetTagsFail _ ->
+      ( model, Cmd.none )
+
+    NewTagName name ->
+      let newTag = model.newTag
+      in ( { model | newTag = { newTag | name = name } }, Cmd.none )
+    NewTagAuthorId strId ->
+      let 
+          newTag = model.newTag
+          id = resultWithDefault 0 (String.toInt strId)
+      in 
+          ( { model | newTag = { newTag | authorId = id } }, Cmd.none )
+
+    NewTag ->
+      ( model, postTag model.newTag )
+    NewTagSucceed resp ->
+      ( { model | newTag = emptyTag }, getTags )
+    NewTagFail _ ->
       ( model, Cmd.none )
 
 resultWithDefault : a -> Result b a -> a
@@ -365,6 +413,53 @@ encodeCollection collection =
         , ("authorId", Encode.int collection.authorId)
         , ("id", cid)]
 
+
+----
+
+getTags : Cmd Msg
+getTags =
+  Task.perform GetTagsFail GetTagsSucceed getTagsTask
+
+getTagsTask : Task (HttpBuilder.Error String) (HttpBuilder.Response Tags)
+getTagsTask =
+  HttpBuilder.get "/api/tags"
+    |> withHeader "Content-Type" "application/json"
+    |> send (jsonReader decodeTags) stringReader
+
+postTag : Tag -> Cmd Msg
+postTag tag =
+  Task.perform NewTagFail NewTagSucceed (postTagTask tag)
+
+postTagTask : Collection -> Task (HttpBuilder.Error String) (HttpBuilder.Response Tag)
+postTagTask tag =
+  HttpBuilder.post "/api/tags"
+    |> withHeader "Content-Type" "application/json"
+    |> withJsonBody (encodeTag tag)
+    |> send (jsonReader decodeTag) stringReader
+
+decodeTags : Decode.Decoder Tags
+decodeTags =
+  Decode.list decodeTag
+
+decodeTag : Decode.Decoder Tag
+decodeTag =
+  Decode.object3 Tag
+    ("name" := Decode.string)
+    ("authorId" := Decode.int)
+    (Decode.maybe ("id" := Decode.int))
+
+encodeTag : Tag -> Encode.Value
+encodeTag tag =
+  let 
+      tid = case tag.id of
+        Nothing -> Encode.null
+        Just i -> Encode.int i
+  in
+      Encode.object
+        [ ("name", Encode.string tag.name)
+        , ("authorId", Encode.int tag.authorId)
+        , ("id", tid)]
+
 -- VIEW
 
 view : Model -> Html Msg
@@ -374,6 +469,8 @@ view model =
     , viewNewAuthor model.newAuthor
     , viewCollections model.collections
     , viewNewCollection model.newCollection
+    , viewTags model.tags
+    , viewNewTag model.newTag
     , viewPosts model.posts
     , viewNewPost model.newPost
     ]
@@ -434,4 +531,21 @@ viewNewCollection collection =
     [ input [ type' "text", placeholder "Nome", value collection.name, onInput NewCollectionName ] []
     , input [ type' "number", value (toString collection.authorId), onInput NewCollectionAuthorId] []
     , button [ onClick NewCollection ] [ text ("Criar") ]]
+
+viewTags : Tags -> Html Msg
+viewTags tags =
+  ul []
+    (List.map viewTag tags)
+
+viewTag : Tag -> Html Msg
+viewTag tag =
+  li []
+    [ text tag.name ]
+
+viewNewTag : Tag -> Html Msg
+viewNewTag tag =
+  div [ class "form" ]
+    [ input [ type' "text", placeholder "Nome", value tag.name, onInput NewTagName ] []
+    , input [ type' "number", value (toString tag.authorId), onInput NewTagAuthorId] []
+    , button [ onClick NewTag ] [ text ("Criar") ]]
 
