@@ -508,9 +508,11 @@ viewAuthors authors =
 viewAuthor : Author -> Html Msg
 viewAuthor author =
   li []
-    [ span [] 
-      [ (text author.name)
-      , (text (" (" ++ author.nick ++ ")"))] ]
+    [ span [ class "has-controls" ] 
+      [ (text author.name) 
+      , span [ class "controls" ]
+        [ button [] [ text "editar" ]
+        , button [] [ text "deletar" ] ] ] ]
 
 viewNewAuthor : Author -> Html Msg
 viewNewAuthor { nick, name, password } =
