@@ -3,6 +3,11 @@ import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String
+import Http
+import Debug
+import Json.Decode as Json exposing ((:=))
+import Json.Encode as JSEncode
+import Task exposing (..)
 
 main =
   Html.program 
@@ -49,6 +54,8 @@ type Msg
   | Nick String
   | Password String
   | Login
+  | LoginSucceed String
+  | LoginFail Http.Error
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -63,14 +70,35 @@ update action model =
       let login = model.login
       in ({ model | login = { login | password = password } }, Cmd.none)
     Login ->
+      (model, postLogin model.login)
+    LoginSucceed _ ->
+      (model, Cmd.none)
+    LoginFail _ ->
       (model, Cmd.none)
 
+postLogin : Author -> Cmd Msg
+postLogin author =
+  Task.perform LoginFail LoginSucceed 
+    (Http.post Json.string "/api/login" (Http.string (encodeAuthor author)))
+
+encodeAuthor : Author -> String
+encodeAuthor { name, nick, password } =
+  JSEncode.encode 0 <|
+    JSEncode.object
+      [ ("name", JSEncode.string name)
+      , ("nick", JSEncode.string nick)
+      , ("password", JSEncode.string password)]
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
   div []
-    [ input [ type' "text", placeholder "Nick", onInput Nick ] []
-    , input [ type' "password", placeholder "Senha", onInput Password ] [] 
-    , button [ onClick Login ] [ text ("Enviar") ] ]
+    [ div [] 
+      [ input [ type' "text", placeholder "Nick", onInput Nick ] []
+      , input [ type' "password", placeholder "Senha", onInput Password ] [] 
+      , button [ onClick Login ] [ text ("Enviar") ] ] 
+    , div []
+      [ text "authors" ] ]
+
+
