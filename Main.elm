@@ -21,7 +21,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    initModel ! [getAuthors, getPosts]
+    initModel ! [getAuthors, getPosts, getCollections]
 
 -- MODEL
 
@@ -30,6 +30,7 @@ type alias Model =
   , newAuthor : Author
   , posts : Posts
   , newPost : Post
+  , collections : Collections
   }
 
 type alias Authors =
@@ -52,12 +53,43 @@ type alias Post =
   , id : Maybe Int
   }
 
+type alias Collections =
+  List Collection
+
+type alias Collection =
+  { name : String
+  , authorId : Int
+  , id : Maybe Int
+  }
+
+type alias Tags =
+  List Tag
+
+type alias Tag =
+  { name : String
+  , authorId : Int
+  , id : Maybe Int
+  }
+
+type alias TagPost =
+  { tagId : Int
+  , postId : Int
+  , id : Maybe Int
+  }
+
+type alias CollectionPost =
+  { collectionId : Int
+  , postId : Int
+  , id : Maybe Int
+  }
+
 initModel : Model
 initModel = 
   { authors = []
   , newAuthor = emptyAuthor
   , posts = []
   , newPost = emptyPost
+  , collections = []
   }
 
 emptyAuthor : Author
@@ -94,6 +126,10 @@ type Msg
   | NewPost
   | NewPostSucceed (HttpBuilder.Response Post)
   | NewPostFail (HttpBuilder.Error String)
+
+  | GetCollections
+  | GetCollectionsSucceed (HttpBuilder.Response Collections)
+  | GetCollectionsFail (HttpBuilder.Error String)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -150,6 +186,13 @@ update action model =
     NewPostSucceed resp ->
       ( { model | newPost = emptyPost }, getPosts )
     NewPostFail _ ->
+      ( model, Cmd.none )
+
+    GetCollections ->
+      ( model, getCollections )
+    GetCollectionsSucceed resp ->
+      ( { model | collections = resp.data }, Cmd.none )
+    GetCollectionsFail _ ->
       ( model, Cmd.none )
 
 getAuthors : Cmd Msg
@@ -244,18 +287,43 @@ encodePost post =
         , ("authorId", Encode.int post.authorId)
         , ("id", pid)]
 
+getCollections : Cmd Msg
+getCollections =
+  Task.perform GetCollectionsFail GetCollectionsSucceed getCollectionsTask
+
+getCollectionsTask : Task (HttpBuilder.Error String) (HttpBuilder.Response Collections)
+getCollectionsTask =
+  HttpBuilder.get "/api/collections"
+    |> withHeader "Content-Type" "application/json"
+    |> send (jsonReader decodeCollections) stringReader
+
+decodeCollections : Decode.Decoder Collections
+decodeCollections =
+  Decode.list decodeCollection
+
+decodeCollection : Decode.Decoder Collection
+decodeCollection =
+  Decode.object3 Collection
+    ("name" := Decode.string)
+    ("authorId" := Decode.int)
+    (Decode.maybe ("id" := Decode.int))
+
 -- VIEW
 
 view : Model -> Html Msg
 view model =
   div []
-    [ div []
-      [ ul []
-        (List.map (viewAuthor) model.authors)]
+    [ viewAuthors model.authors
     , viewNewAuthor model.newAuthor
+    , viewCollections model.collections
     , viewPosts model.posts
     , viewNewPost model.newPost
     ]
+
+viewAuthors : Authors -> Html Msg
+viewAuthors authors =
+  ul []
+    (List.map (viewAuthor) authors)
 
 viewAuthor : Author -> Html Msg
 viewAuthor author =
@@ -291,4 +359,14 @@ viewNewPost post =
     , textarea [ placeholder "Conteúdo", value post.content, onInput NewPostContent ] []
     , input [ type' "number", value (toString post.authorId), onInput NewPostAuthorId ] []
     , button [ onClick NewPost ] [ text ("Publicar") ] ]
+
+viewCollections : Collections -> Html Msg
+viewCollections collections =
+  ul []
+    (List.map viewCollection collections)
+
+viewCollection : Collection -> Html Msg
+viewCollection collection =
+  li []
+    [ text collection.name ]
 
