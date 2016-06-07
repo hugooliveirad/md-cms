@@ -22,7 +22,7 @@ main =
 init : ( Model, Cmd Msg )
 init =
     ( initModel
-    , Cmd.none
+    , getAuthors
     )
 
 -- MODEL
@@ -31,6 +31,7 @@ type alias Model =
   { login : Author
   , loggedIn : Bool
   , authors : Authors
+  , newAuthor : Author
   }
 
 type alias Authors =
@@ -40,14 +41,20 @@ type alias Author =
   { name : String
   , nick : String
   , password : String
-  , id : Maybe Int}
+  , id : Maybe Int
+  }
 
 initModel : Model
 initModel = 
-  { login = { name = "", nick = "", password = "", id = Nothing } 
+  { login = emptyAuthor
   , loggedIn = False
   , authors = []
+  , newAuthor = emptyAuthor
   }
+
+emptyAuthor : Author
+emptyAuthor =
+  { name = "", nick = "", password = "", id = Nothing }
 
 -- UPDATE
 
@@ -55,12 +62,22 @@ type Msg
   = Name String
   | Nick String
   | Password String
+
   | Login
   | LoginSucceed (HttpBuilder.Response String)
   | LoginFail (HttpBuilder.Error String)
+
   | GetAuthors
   | GetAuthorsSucceed (HttpBuilder.Response (List Author))
   | GetAuthorsFail (HttpBuilder.Error String)
+
+  | NewName String
+  | NewNick String
+  | NewPassword String
+
+  | NewAuthor
+  | NewAuthorSucceed (HttpBuilder.Response Author)
+  | NewAuthorFail (HttpBuilder.Error String)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -92,6 +109,23 @@ update action model =
     GetAuthorsFail _ ->
       ( model, Cmd.none )
 
+    NewName name ->
+      let newAuthor = model.newAuthor
+      in ( { model | newAuthor = { newAuthor | name = name } }, Cmd.none )
+    NewNick nick ->
+      let newAuthor = model.newAuthor
+      in ( { model | newAuthor = { newAuthor | nick = nick } }, Cmd.none )
+    NewPassword password ->
+      let newAuthor = model.newAuthor
+      in ( { model | newAuthor = { newAuthor | password = password } }, Cmd.none )
+    NewAuthor ->
+      ( model, postAuthor model.newAuthor )
+    NewAuthorSucceed resp ->
+      ( { model | newAuthor = emptyAuthor}, getAuthors )
+    NewAuthorFail _ ->
+      ( model, Cmd.none )
+
+
 postLogin : Author -> Cmd Msg
 postLogin author =
   Task.perform LoginFail LoginSucceed 
@@ -106,6 +140,14 @@ getAuthors =
     (HttpBuilder.get "/api/authors"
       |> withHeader "Content-Type" "application/json"
       |> send (jsonReader decodeAuthors) stringReader)
+
+postAuthor : Author -> Cmd Msg
+postAuthor author =
+  Task.perform NewAuthorFail NewAuthorSucceed
+    (HttpBuilder.post "/api/authors"
+      |> withHeader "Content-Type" "application/json"
+      |> withJsonBody (encodeAuthor author)
+      |> send (jsonReader decodeAuthor) stringReader)
 
 decodeAuthors : Decode.Decoder (List Author)
 decodeAuthors =
@@ -137,15 +179,17 @@ encodeAuthor { name, nick, password, id } =
 view : Model -> Html Msg
 view model =
   div []
-    [ div [] 
-      [ input [ type' "text", placeholder "Nick", onInput Nick ] []
-      , input [ type' "password", placeholder "Senha", onInput Password ] [] 
-      , button [ onClick Login ] [ text ("Enviar") ] ] 
-    , div []
+    [ div []
       [ ul []
         (List.map (viewAuthor) model.authors)]
-    , div []
-      [ text (if model.loggedIn == True then "logged in" else "logged out") ]]
+    , viewNewAuthor ]
+
+viewLogin : Author -> Html Msg
+viewLogin login =
+  div [] 
+    [ input [ type' "text", placeholder "Nick", value login.nick, onInput Nick ] []
+    , input [ type' "password", placeholder "Senha", value login.password, onInput Password ] [] 
+    , button [ onClick Login ] [ text ("Enviar") ] ]
 
 viewAuthor : Author -> Html Msg
 viewAuthor author =
@@ -154,3 +198,10 @@ viewAuthor author =
       [ (text author.name)
       , (text (" (" ++ author.nick ++ ")"))] ]
 
+viewNewAuthor : Html Msg
+viewNewAuthor =
+  div []
+    [ input [ type' "text", placeholder "Nick", onInput NewNick ] []
+    , input [ type' "text", placeholder "Nome", onInput NewName ] []
+    , input [ type' "password", placeholder "Senha", onInput NewPassword ] []
+    , button [ onClick NewAuthor ] [ text ("Criar") ] ]

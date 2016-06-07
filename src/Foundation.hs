@@ -29,7 +29,7 @@ instance YesodPersist Page where
        runSqlPool f pool
 
 instance Yesod Page where
-  isAuthorized _ False = return Authorized
+  isAuthorized _ _ = return Authorized
   isAuthorized LoginR _ = return Authorized
   -- prevent write from users not logged in
   isAuthorized _ True = return AuthenticationRequired
