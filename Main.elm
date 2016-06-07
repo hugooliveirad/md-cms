@@ -225,5 +225,7 @@ viewPosts posts =
 viewPost : Bool -> Post -> Html Msg
 viewPost preview post =
   li []
-    [ text post.title ]
+    [ div []
+      [ h1 [] [ text post.title ] 
+      , div [] [ text post.content ] ] ]
 
