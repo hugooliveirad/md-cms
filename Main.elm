@@ -51,7 +51,8 @@ type alias Post =
   { title : String
   , content : String
   , authorId : Int
-  , id : Maybe Int}
+  , id : Maybe Int
+  }
 
 initModel : Model
 initModel = 
@@ -104,6 +105,7 @@ update action model =
     NewPassword password ->
       let newAuthor = model.newAuthor
       in ( { model | newAuthor = { newAuthor | password = password } }, Cmd.none )
+
     NewAuthor ->
       ( model, postAuthor model.newAuthor )
     NewAuthorSucceed resp ->
@@ -149,7 +151,7 @@ encodeAuthor { name, nick, password, id } =
         [ ("name", Encode.string name)
         , ("nick", Encode.string nick)
         , ("password", Encode.string password)
-        , ("id", eid )]
+        , ("id", eid)]
 
 -- VIEW
 
