@@ -87,6 +87,10 @@ type Msg
   | GetPostsSucceed (HttpBuilder.Response Posts)
   | GetPostsFail (HttpBuilder.Error String)
 
+  | NewPostTitle String
+  | NewPostContent String
+  | NewPostAuthorId String
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
   case action of
@@ -121,6 +125,22 @@ update action model =
       ( { model | posts = resp.data }, Cmd.none )
     GetPostsFail _ ->
       ( model, Cmd.none )
+
+    NewPostTitle title ->
+      let newPost = model.newPost
+      in ( { model | newPost = { newPost | title = title } }, Cmd.none )
+    NewPostContent content ->
+      let newPost = model.newPost
+      in ( { model | newPost = { newPost | content = content } }, Cmd.none )
+    NewPostAuthorId strId ->
+      let 
+          newPost = model.newPost
+          id = case String.toInt strId of
+            Ok id -> id
+            Err _ -> 0
+      in 
+          ( { model | newPost = { newPost | authorId = id } }, Cmd.none )
+
 
 getAuthors : Cmd Msg
 getAuthors =
@@ -200,6 +220,7 @@ view model =
         (List.map (viewAuthor) model.authors)]
     , viewNewAuthor model.newAuthor
     , viewPosts model.posts
+    , viewNewPost model.newPost
     ]
 
 viewAuthor : Author -> Html Msg
@@ -211,7 +232,7 @@ viewAuthor author =
 
 viewNewAuthor : Author -> Html Msg
 viewNewAuthor { nick, name, password } =
-  div []
+  div [ class "form" ]
     [ input [ type' "text", placeholder "Nick", value nick, onInput NewNick ] []
     , input [ type' "text", placeholder "Nome", value name, onInput NewName ] []
     , input [ type' "password", placeholder "Senha", value password, onInput NewPassword ] []
@@ -229,3 +250,9 @@ viewPost preview post =
       [ h1 [] [ text post.title ] 
       , div [] [ text post.content ] ] ]
 
+viewNewPost : Post -> Html Msg
+viewNewPost post =
+  div [ class "form" ]
+    [ input [ type' "text", placeholder "Título", value post.title, onInput NewPostTitle ] []
+    , textarea [ placeholder "Conteúdo", value post.content, onInput NewPostContent ] []
+    , input [ type' "number", value (toString post.authorId), onInput NewPostAuthorId ] [] ]
