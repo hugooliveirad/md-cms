@@ -39,6 +39,8 @@ type alias Model =
   , newCollection : Collection
   , tags : Tags
   , newTag : Tag
+  , editAuthorId : Maybe Int
+  , editAuthor : Author
   }
 
 type alias Authors =
@@ -101,6 +103,8 @@ initModel =
   , newCollection = emptyCollection
   , tags = []
   , newTag = emptyTag
+  , editAuthorId = Just 3
+  , editAuthor = emptyAuthor
   }
 
 emptyAuthor : Author
@@ -167,6 +171,22 @@ type Msg
   | NewTag
   | NewTagSucceed (HttpBuilder.Response Tag)
   | NewTagFail (HttpBuilder.Error String)
+
+  | DeleteAuthor Int
+  | DeleteAuthorSucceed (HttpBuilder.Response String)
+  | DeleteAuthorFail (HttpBuilder.Error String)
+
+  | DeletePost Int
+  | DeletePostSucceed (HttpBuilder.Response String)
+  | DeletePostFail (HttpBuilder.Error String)
+
+  | DeleteCollection Int
+  | DeleteCollectionSucceed (HttpBuilder.Response String)
+  | DeleteCollectionFail (HttpBuilder.Error String)
+
+  | DeleteTag Int
+  | DeleteTagSucceed (HttpBuilder.Response String)
+  | DeleteTagFail (HttpBuilder.Error String)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -271,6 +291,34 @@ update action model =
     NewTagFail _ ->
       ( model, Cmd.none )
 
+    DeleteAuthor id ->
+      ( model, deleteAuthor id )
+    DeleteAuthorSucceed _ ->
+      ( model, getAuthors )
+    DeleteAuthorFail _ ->
+      ( model, Cmd.none )
+
+    DeletePost id ->
+      ( model, deletePost id )
+    DeletePostSucceed _ ->
+      ( model, getPosts )
+    DeletePostFail _ ->
+      ( model, Cmd.none )
+
+    DeleteCollection id ->
+      ( model, deleteCollection id )
+    DeleteCollectionSucceed _ ->
+      ( model, getCollections )
+    DeleteCollectionFail _ ->
+      ( model, Cmd.none )
+
+    DeleteTag id ->
+      ( model, deleteTag id )
+    DeleteTagSucceed _ ->
+      ( model, getTags )
+    DeleteTagFail _ ->
+      ( model, Cmd.none )
+
 resultWithDefault : a -> Result b a -> a
 resultWithDefault def res =
   case res of
@@ -297,6 +345,16 @@ postAuthorTask author =
     |> withHeader "Content-Type" "application/json"
     |> withJsonBody (encodeAuthor author)
     |> send (jsonReader decodeAuthor) stringReader
+
+deleteAuthor : Int -> Cmd Msg
+deleteAuthor id =
+  Task.perform DeleteAuthorFail DeleteAuthorSucceed <| deleteAuthorTask id
+
+deleteAuthorTask : Int -> Task (HttpBuilder.Error String) (HttpBuilder.Response String)
+deleteAuthorTask id =
+  HttpBuilder.delete ("/api/authors/" ++ toString id)
+    |> withHeader "Content-Type" "application/json"
+    |> send stringReader stringReader
 
 decodeAuthors : Decode.Decoder Authors
 decodeAuthors =
@@ -344,6 +402,16 @@ postPostTask post =
     |> withJsonBody (encodePost post)
     |> send (jsonReader decodePost) stringReader
 
+deletePost : Int -> Cmd Msg
+deletePost id =
+  Task.perform DeletePostFail DeletePostSucceed <| deletePostTask id
+
+deletePostTask : Int -> Task (HttpBuilder.Error String) (HttpBuilder.Response String)
+deletePostTask id =
+  HttpBuilder.delete ("/api/posts/" ++ toString id)
+    |> withHeader "Content-Type" "application/json"
+    |> send stringReader stringReader
+
 decodePosts : Decode.Decoder Posts
 decodePosts =
   Decode.list decodePost
@@ -390,6 +458,16 @@ postCollectionTask collection =
     |> withJsonBody (encodeCollection collection)
     |> send (jsonReader decodeCollection) stringReader
 
+deleteCollection : Int -> Cmd Msg
+deleteCollection id =
+  Task.perform DeleteCollectionFail DeleteCollectionSucceed <| deleteCollectionTask id
+
+deleteCollectionTask : Int -> Task (HttpBuilder.Error String) (HttpBuilder.Response String)
+deleteCollectionTask id =
+  HttpBuilder.delete ("/api/collections/" ++ toString id)
+    |> withHeader "Content-Type" "application/json"
+    |> send stringReader stringReader
+
 decodeCollections : Decode.Decoder Collections
 decodeCollections =
   Decode.list decodeCollection
@@ -413,9 +491,6 @@ encodeCollection collection =
         , ("authorId", Encode.int collection.authorId)
         , ("id", cid)]
 
-
-----
-
 getTags : Cmd Msg
 getTags =
   Task.perform GetTagsFail GetTagsSucceed getTagsTask
@@ -436,6 +511,16 @@ postTagTask tag =
     |> withHeader "Content-Type" "application/json"
     |> withJsonBody (encodeTag tag)
     |> send (jsonReader decodeTag) stringReader
+
+deleteTag : Int -> Cmd Msg
+deleteTag id =
+  Task.perform DeleteTagFail DeleteTagSucceed <| deleteTagTask id
+
+deleteTagTask : Int -> Task (HttpBuilder.Error String) (HttpBuilder.Response String)
+deleteTagTask id =
+  HttpBuilder.delete ("/api/tags/" ++ toString id)
+    |> withHeader "Content-Type" "application/json"
+    |> send stringReader stringReader
 
 decodeTags : Decode.Decoder Tags
 decodeTags =
@@ -474,7 +559,7 @@ view model =
         ]
       , sidebar 
         [ sidebarSection
-          [viewAuthors model.authors
+          [ viewAuthors model.authors
           , viewNewAuthor model.newAuthor
           ]
         , sidebarSection
@@ -507,12 +592,11 @@ viewAuthors authors =
 
 viewAuthor : Author -> Html Msg
 viewAuthor author =
-  li []
+  li [] 
     [ span [ class "has-controls" ] 
       [ (text author.name) 
       , span [ class "controls" ]
-        [ button [] [ text "editar" ]
-        , button [] [ text "deletar" ] ] ] ]
+        [ button [ onClick (DeleteAuthor (Maybe.withDefault 0 author.id)) ] [ text "deletar" ] ] ] ]
 
 viewNewAuthor : Author -> Html Msg
 viewNewAuthor { nick, name, password } =
@@ -530,8 +614,12 @@ viewPosts posts =
 viewPost : Bool -> Post -> Html Msg
 viewPost preview post =
   li []
-    [ article []
-      [ h2 [] [ text post.title ] 
+    [ article [ class "has-controls" ]
+      [ h2 [] 
+        [ text post.title 
+        , span [ class "controls" ]
+          [ button [ onClick (DeletePost (Maybe.withDefault 0 post.id)) ] [ text "deletar" ] ]
+        ] 
       , div [] [ text post.content ] ] ]
 
 viewNewPost : Post -> Html Msg
@@ -550,7 +638,10 @@ viewCollections collections =
 viewCollection : Collection -> Html Msg
 viewCollection collection =
   li []
-    [ text collection.name ]
+    [ span [ class "has-controls" ]
+      [ text collection.name 
+      , span [ class "controls" ]
+        [ button [ onClick (DeleteCollection (Maybe.withDefault 0 collection.id)) ] [ text "deletar" ] ] ] ]
 
 viewNewCollection : Collection -> Html Msg
 viewNewCollection collection =
@@ -567,7 +658,10 @@ viewTags tags =
 viewTag : Tag -> Html Msg
 viewTag tag =
   li []
-    [ text tag.name ]
+    [ span [ class "has-controls" ]
+      [ text tag.name 
+      , span [ class "controls" ]
+              [ button [ onClick (DeleteTag (Maybe.withDefault 0 tag.id)) ] [ text "deletar" ] ] ] ]
 
 viewNewTag : Tag -> Html Msg
 viewNewTag tag =
