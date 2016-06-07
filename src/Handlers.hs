@@ -24,6 +24,9 @@ getHomeR = defaultLayout $ do
   toWidget [whamlet|
               <div id="app-wrapper">
            |]
+  toWidget [julius|
+              Elm.Main.embed(document.getElementById("app-wrapper"))
+           |]
 
 -- API
 
