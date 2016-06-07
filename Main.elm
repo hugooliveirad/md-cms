@@ -3,10 +3,10 @@ import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import String
-import Http
+import HttpBuilder exposing (..)
 import Debug
-import Json.Decode as Json exposing ((:=))
-import Json.Encode as JSEncode
+import Json.Decode as Decode exposing ((:=))
+import Json.Encode as Encode
 import Task exposing (..)
 
 main =
@@ -29,6 +29,7 @@ init =
 
 type alias Model = 
   { login : Author
+  , loggedIn : Bool
   , authors : Maybe Authors
   }
 
@@ -44,6 +45,7 @@ type alias Author =
 initModel : Model
 initModel = 
   { login = { name = "", nick = "", password = "" } 
+  , loggedIn = False
   , authors = Just []
   }
 
@@ -54,8 +56,8 @@ type Msg
   | Nick String
   | Password String
   | Login
-  | LoginSucceed String
-  | LoginFail Http.Error
+  | LoginSucceed (HttpBuilder.Response String)
+  | LoginFail (HttpBuilder.Error String)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
@@ -72,22 +74,26 @@ update action model =
     Login ->
       (model, postLogin model.login)
     LoginSucceed _ ->
-      (model, Cmd.none)
+      ( { model | loggedIn = True
+        , login = { name = "", nick = "", password = "" } 
+        }, Cmd.none)
     LoginFail _ ->
-      (model, Cmd.none)
+      ({ model | loggedIn = True }, Cmd.none)
 
 postLogin : Author -> Cmd Msg
 postLogin author =
   Task.perform LoginFail LoginSucceed 
-    (Http.post Json.string "/api/login" (Http.string (encodeAuthor author)))
+    (HttpBuilder.post "/api/login"
+      |> withJsonBody (encodeAuthor author)
+      |> withHeader "Content-Type" "application/json"
+      |> send stringReader stringReader)
 
-encodeAuthor : Author -> String
+encodeAuthor : Author -> Encode.Value
 encodeAuthor { name, nick, password } =
-  JSEncode.encode 0 <|
-    JSEncode.object
-      [ ("name", JSEncode.string name)
-      , ("nick", JSEncode.string nick)
-      , ("password", JSEncode.string password)]
+  Encode.object
+    [ ("name", Encode.string name)
+    , ("nick", Encode.string nick)
+    , ("password", Encode.string password)]
 
 -- VIEW
 
@@ -99,6 +105,8 @@ view model =
       , input [ type' "password", placeholder "Senha", onInput Password ] [] 
       , button [ onClick Login ] [ text ("Enviar") ] ] 
     , div []
-      [ text "authors" ] ]
+      [ text "authors" ]
+    , div []
+      [ text (if model.loggedIn == True then "logged in" else "logged out") ]]
 
 
