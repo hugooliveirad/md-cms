@@ -21,9 +21,7 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( initModel
-    , getAuthors
-    )
+    initModel ! [getAuthors, getPosts]
 
 -- MODEL
 
@@ -85,6 +83,10 @@ type Msg
   | NewAuthorSucceed (HttpBuilder.Response Author)
   | NewAuthorFail (HttpBuilder.Error String)
 
+  | GetPosts
+  | GetPostsSucceed (HttpBuilder.Response Posts)
+  | GetPostsFail (HttpBuilder.Error String)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
   case action of
@@ -113,22 +115,35 @@ update action model =
     NewAuthorFail _ ->
       ( model, Cmd.none )
 
+    GetPosts ->
+      ( model, getPosts )
+    GetPostsSucceed resp ->
+      ( { model | posts = resp.data }, Cmd.none )
+    GetPostsFail _ ->
+      ( model, Cmd.none )
+
 getAuthors : Cmd Msg
 getAuthors =
-  Task.perform GetAuthorsFail GetAuthorsSucceed
-    (HttpBuilder.get "/api/authors"
-      |> withHeader "Content-Type" "application/json"
-      |> send (jsonReader decodeAuthors) stringReader)
+  Task.perform GetAuthorsFail GetAuthorsSucceed getAuthorsTask
+
+getAuthorsTask : Task (HttpBuilder.Error String) (HttpBuilder.Response Authors)
+getAuthorsTask =
+  HttpBuilder.get "/api/authors"
+    |> withHeader "Content-Type" "application/json"
+    |> send (jsonReader decodeAuthors) stringReader 
 
 postAuthor : Author -> Cmd Msg
 postAuthor author =
-  Task.perform NewAuthorFail NewAuthorSucceed
-    (HttpBuilder.post "/api/authors"
-      |> withHeader "Content-Type" "application/json"
-      |> withJsonBody (encodeAuthor author)
-      |> send (jsonReader decodeAuthor) stringReader)
+  Task.perform NewAuthorFail NewAuthorSucceed <| postAuthorTask author
 
-decodeAuthors : Decode.Decoder (List Author)
+postAuthorTask : Author -> Task (HttpBuilder.Error String) (HttpBuilder.Response Author)
+postAuthorTask author =
+  HttpBuilder.post "/api/authors"
+    |> withHeader "Content-Type" "application/json"
+    |> withJsonBody (encodeAuthor author)
+    |> send (jsonReader decodeAuthor) stringReader
+
+decodeAuthors : Decode.Decoder Authors
 decodeAuthors =
   Decode.list decodeAuthor
 
@@ -152,6 +167,28 @@ encodeAuthor { name, nick, password, id } =
         , ("nick", Encode.string nick)
         , ("password", Encode.string password)
         , ("id", eid)]
+
+getPosts : Cmd Msg
+getPosts =
+  Task.perform GetPostsFail GetPostsSucceed getPostsTask
+
+getPostsTask : Task (HttpBuilder.Error String) (HttpBuilder.Response Posts)
+getPostsTask =
+  HttpBuilder.get "/api/posts"
+    |> withHeader "Content-Type" "application/json"
+    |> send (jsonReader decodePosts) stringReader
+
+decodePosts : Decode.Decoder Posts
+decodePosts =
+  Decode.list decodePost
+
+decodePost : Decode.Decoder Post
+decodePost =
+  Decode.object4 Post
+    ("title" := Decode.string)
+    ("content" := Decode.string)
+    ("authorId" := Decode.int)
+    (Decode.maybe ("id" := Decode.int))
 
 -- VIEW
 
