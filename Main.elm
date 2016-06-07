@@ -28,10 +28,10 @@ init =
 -- MODEL
 
 type alias Model = 
-  { login : Author
-  , loggedIn : Bool
-  , authors : Authors
+  { authors : Authors
   , newAuthor : Author
+  , posts : Posts
+  , newPost : Post
   }
 
 type alias Authors =
@@ -44,30 +44,35 @@ type alias Author =
   , id : Maybe Int
   }
 
+type alias Posts =
+  List Post
+
+type alias Post =
+  { title : String
+  , content : String
+  , authorId : Int
+  , id : Maybe Int}
+
 initModel : Model
 initModel = 
-  { login = emptyAuthor
-  , loggedIn = False
-  , authors = []
+  { authors = []
   , newAuthor = emptyAuthor
+  , posts = []
+  , newPost = emptyPost
   }
 
 emptyAuthor : Author
 emptyAuthor =
   { name = "", nick = "", password = "", id = Nothing }
 
+emptyPost : Post
+emptyPost =
+  { title = "", content = "", authorId = 0, id = Nothing }
+
 -- UPDATE
 
 type Msg
-  = Name String
-  | Nick String
-  | Password String
-
-  | Login
-  | LoginSucceed (HttpBuilder.Response String)
-  | LoginFail (HttpBuilder.Error String)
-
-  | GetAuthors
+  = GetAuthors
   | GetAuthorsSucceed (HttpBuilder.Response (List Author))
   | GetAuthorsFail (HttpBuilder.Error String)
 
@@ -82,25 +87,6 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update action model =
   case action of
-
-    Name name ->
-      let login = model.login
-      in ({ model | login = { login | name = name } }, Cmd.none)
-    Nick nick ->
-      let login = model.login
-      in ({ model | login = { login | nick = nick } }, Cmd.none)
-    Password password ->
-      let login = model.login
-      in ({ model | login = { login | password = password } }, Cmd.none)
-
-    Login ->
-      (model, postLogin model.login)
-    LoginSucceed _ ->
-      ( { model | loggedIn = True
-        , login = { name = "", nick = "", password = "", id = Nothing } 
-        }, getAuthors )
-    LoginFail _ ->
-      ({ model | loggedIn = True }, Cmd.none)
 
     GetAuthors ->
       ( model, getAuthors )
@@ -124,15 +110,6 @@ update action model =
       ( { model | newAuthor = emptyAuthor}, getAuthors )
     NewAuthorFail _ ->
       ( model, Cmd.none )
-
-
-postLogin : Author -> Cmd Msg
-postLogin author =
-  Task.perform LoginFail LoginSucceed 
-    (HttpBuilder.post "/api/login"
-      |> withJsonBody (encodeAuthor author)
-      |> withHeader "Content-Type" "application/json"
-      |> send stringReader stringReader)
 
 getAuthors : Cmd Msg
 getAuthors =
@@ -182,14 +159,9 @@ view model =
     [ div []
       [ ul []
         (List.map (viewAuthor) model.authors)]
-    , viewNewAuthor ]
-
-viewLogin : Author -> Html Msg
-viewLogin login =
-  div [] 
-    [ input [ type' "text", placeholder "Nick", value login.nick, onInput Nick ] []
-    , input [ type' "password", placeholder "Senha", value login.password, onInput Password ] [] 
-    , button [ onClick Login ] [ text ("Enviar") ] ]
+    , viewNewAuthor model.newAuthor
+    , viewPosts model.posts
+    ]
 
 viewAuthor : Author -> Html Msg
 viewAuthor author =
@@ -198,10 +170,21 @@ viewAuthor author =
       [ (text author.name)
       , (text (" (" ++ author.nick ++ ")"))] ]
 
-viewNewAuthor : Html Msg
-viewNewAuthor =
+viewNewAuthor : Author -> Html Msg
+viewNewAuthor { nick, name, password } =
   div []
-    [ input [ type' "text", placeholder "Nick", onInput NewNick ] []
-    , input [ type' "text", placeholder "Nome", onInput NewName ] []
-    , input [ type' "password", placeholder "Senha", onInput NewPassword ] []
+    [ input [ type' "text", placeholder "Nick", value nick, onInput NewNick ] []
+    , input [ type' "text", placeholder "Nome", value name, onInput NewName ] []
+    , input [ type' "password", placeholder "Senha", value password, onInput NewPassword ] []
     , button [ onClick NewAuthor ] [ text ("Criar") ] ]
+
+viewPosts : Posts -> Html Msg
+viewPosts posts =
+  ul []
+    (List.map (viewPost True) posts)
+
+viewPost : Bool -> Post -> Html Msg
+viewPost preview post =
+  li []
+    [ text post.title ]
+
