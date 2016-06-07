@@ -587,8 +587,9 @@ sidebarSection children =
 
 viewAuthors : Authors -> Html Msg
 viewAuthors authors =
-  ul []
-    (List.map (viewAuthor) authors)
+  div []
+    [ strong [] [ text "Autores" ] 
+    , ul [] (List.map (viewAuthor) authors) ]
 
 viewAuthor : Author -> Html Msg
 viewAuthor author =
@@ -632,8 +633,9 @@ viewNewPost post =
 
 viewCollections : Collections -> Html Msg
 viewCollections collections =
-  ul []
-    (List.map viewCollection collections)
+  div []
+    [ strong [] [ text "Coleções" ] 
+    , ul [] (List.map viewCollection collections) ]
 
 viewCollection : Collection -> Html Msg
 viewCollection collection =
@@ -652,8 +654,9 @@ viewNewCollection collection =
 
 viewTags : Tags -> Html Msg
 viewTags tags =
-  ul []
-    (List.map viewTag tags)
+  div []
+    [ strong [] [ text "Tags" ] 
+    , ul [] (List.map viewTag tags) ]
 
 viewTag : Tag -> Html Msg
 viewTag tag =
